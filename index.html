@@ -4,7 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101c2b"><meta name="description" content="BF3 Tourenplaner – Aufträge, Karten, GPS und Fahrwegkontrolle">
 
-<title>BF3 Tourenplaner 2.2 – GPS-Test</title>
+<title>BF3 Tourenplaner 2.3 – Kartenkontrollpunkte</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--bg:#f3f6f8;--paper:#fff;--ink:#142438;--muted:#68778a;--nav:#101d2d;--accent:#f4a31d;--accent-dark:#c97800;--line:#dfe6eb;--blue:#087b98;--green:#117e5e;--red:#b94640;--r:16px}
@@ -38,14 +38,30 @@ body,main,section,.card,.split,.split>div,.stickyMap,.activejob,.maparea,.roadit
 .footer-note{font-size:12px;line-height:1.55;color:#596e81}
 @media(max-width:850px){.split{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){.cols{grid-template-columns:minmax(0,1fr)}.top{padding:13px 12px}.top .online{font-size:11px;padding:5px 7px}.tab{flex:1 0 auto}.maparea{min-height:300px}.statsgrid{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:12px 12px 90px}.card{padding:14px}.row>.btn{white-space:normal}.brand .sub{font-size:10px}}
+
+/* BF3 2.3 – Kartenauswahl / geordnete Kontrolle auf kleinen Displays */
+.map-pick-panel{border:1px solid #b6cbd5;border-radius:12px;background:#f3f9fc;padding:12px;margin-top:15px}
+.map-pick-panel .label{margin:0 0 7px}.map-pick-panel select{background:#fff}
+.map-pick-panel .row{margin-top:9px}
+.pick-active{background:#fff0d0!important;border-color:#d08000!important}
+.pick-help{font-size:12px;line-height:1.55;color:#365c6d;margin-top:8px}
+.geo-waypoint-icon{background:#077c9f;color:#fff;border:2px solid #fff;border-radius:50%;width:26px;height:26px;display:grid;place-items:center;font-weight:800;font-size:12px;box-shadow:0 2px 8px #0006}
+.route-review-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.road-review-chip{padding:7px 9px;border-radius:9px;background:#eff3f7;border:1px solid #d5e0e6;color:#29445a;font-size:12px;font-weight:700}
+.road-review-chip.missing{background:#fff1e7;border-color:#ecc4a6;color:#7c481f}
+.road-review-chip.found{background:#eaf4ed;border-color:#b7dcc8;color:#1a6850}
+.review-status{border-left:4px solid #bd6d00;background:#fff6e8;padding:12px;border-radius:9px;font-size:12px;line-height:1.5}
+.maparea.pick-target{outline:4px solid #e9a329;outline-offset:3px}
+#progressInfo{line-height:1.45}
+@media(max-width:480px){.map-pick-panel .row>*{flex:1 1 100%}.map-pick-panel select{width:100%}}
 </style>
 </head>
 <body>
-<header class="top"><div class="brand"><div class="logo">BF3</div><div><h1>Tourenplaner</h1><div class="sub">Auftrag · Fahrweg · GPS-Karte · v2.2</div></div></div><div class="online" id="net"><i></i><span id="nettext">Online</span></div></header>
+<header class="top"><div class="brand"><div class="logo">BF3</div><div><h1>Tourenplaner</h1><div class="sub">Auftrag · Fahrweg · GPS-Karte · v2.3</div></div></div><div class="online" id="net"><i></i><span id="nettext">Online</span></div></header>
 <nav class="tabs" aria-label="Hauptnavigation"><button class="tab on" data-tab="auftrag">Auftrag</button><button class="tab" data-tab="route">Routenplan</button><button class="tab" data-tab="auflagen">Auflagen</button><button class="tab" data-tab="fahrt">Live-Fahrt</button><button class="tab" data-tab="archiv">Aufträge</button></nav>
 <main>
 <section class="screen on" id="auftrag">
-<div class="headrow"><h2>Auftrag erfassen</h2><span class="badge good">2.2 · GPS-Diagnose</span></div>
+<div class="headrow"><h2>Auftrag erfassen</h2><span class="badge good">2.3 · GPS & Routenprüfung</span></div>
 <p class="intro">Fotografiere einen Bescheid, importiere ein PDF oder trage die Angaben ein. Alle erkannten Informationen müssen vor der Fahrt geprüft werden.</p>
 <div class="card"><h2>1. Dokument einlesen</h2><label class="filebutton">📷 &nbsp; Foto aufnehmen / Bild auswählen<input id="imagefile" type="file" accept="image/*" capture="environment"></label><div style="height:9px"></div><label class="filebutton">📄 &nbsp; PDF auswählen<input id="pdffile" type="file" accept="application/pdf"></label><img id="imgpreview" class="preview" alt="Auftragsfoto"><div class="row" style="margin-top:12px"><button id="ocrbtn" class="btn dark">Texterkennung starten</button><button id="parsebtn" class="btn outline">Textdaten übernehmen</button></div><p id="ocrstatus" class="status" aria-live="polite">Die Texterkennung benötigt beim ersten Start eine Internetverbindung. Bei PDFs werden bis zu 60 Seiten ausgelesen; Bild-OCR derzeit auf 20 Seiten begrenzt.</p><label class="label" for="ocrtext">Erkannter bzw. eingefügter Auftragstext</label><textarea id="ocrtext" placeholder="Hier erscheint der aus dem Foto oder PDF erkannte Text. Alternativ Fahrweg aus PDF kopieren und hier einfügen." rows="6"></textarea><div class="hint">PDFs mit kopierbarem Text werden direkt ausgelesen. Bei gescannten PDFs oder Fotos erfolgt OCR auf deinem Gerät. Die Erkennung kann Straßennummern, Abfahrten und Rechts-/Links-Angaben falsch lesen.</div></div>
 <div class="card"><h2>Automatische Bescheid-Analyse</h2><p class="intro" style="margin-top:0">Fahrweg, Geltungsdauer, Abmessungen und potenziell wichtige Auflagen werden aus allen lesbaren Seiten extrahiert. Jedes Ergebnis bleibt prüfpflichtig.</p><div id="analysisSummary" class="statsgrid"><div>Noch kein Bescheid ausgewertet.</div></div><div id="analysisWarning" class="attention">Bitte vollständigen Auftrag einlesen und „Textdaten übernehmen“ drücken.</div><div class="row" style="margin-top:12px"><button class="btn small outline" id="openAnalyzed" type="button">Erkannte Strecke und Auflagen ansehen →</button></div></div>
@@ -55,8 +71,30 @@ body,main,section,.card,.split,.split>div,.stickyMap,.activejob,.maparea,.roadit
 <div class="headrow"><h2>Fahrweg planen</h2><span class="badge red" id="routeBadge">Nicht geprüft</span></div>
 <div class="activejob" id="routejob">Kein Auftrag ausgewählt.</div><div class="statuspanel" id="gpsEnvironment" role="status" aria-live="polite">GPS-Prüfung läuft …</div><p class="intro">Zwischenpunkte in der vorgeschriebenen Reihenfolge einfügen. Die Straßenführung zwischen den Punkten ist zunächst nur ein Karten-Routenvorschlag.</p>
 <div class="split"><div>
-<div class="card"><h2>Route und Kontrollpunkte</h2><div class="cols"><div><label class="label">Start</label><input id="rstart" placeholder="Startadresse"></div><div><label class="label">Ziel</label><input id="rend" placeholder="Zieladresse"></div></div><label class="label">Verbindlich zu passierende Zwischenpunkte</label><div class="stops" id="stops"></div><div class="row" style="margin-top:10px"><button id="addstop" class="btn small outline">+ Zwischenpunkt</button><button id="savepoints" class="btn small dark">Zwischenpunkte speichern</button><button id="loadjobdata" class="btn small outline">Auftragsdaten laden</button></div><p class="tiny" style="margin-top:8px">Zwischenpunkte müssen konkrete Adressen oder Koordinaten sein. Straßennamen allein garantieren keinen identischen Verlauf.</p><div class="row" style="margin-top:14px"><button id="calc" class="btn primary">Route berechnen</button><button id="resetroute" class="btn outline">Route löschen</button></div><p id="rstatus" class="status" aria-live="polite"></p><div class="row" style="margin-top:9px"><div class="metric"><span>Routenlänge</span><b id="distance">–</b></div><div class="metric"><span>Fahrzeit ohne Pausen</span><b id="duration">–</b></div></div></div>
+<div class="card"><h2>Route und Kontrollpunkte</h2><div class="cols"><div><label class="label">Start</label><input id="rstart" placeholder="Startadresse"></div><div><label class="label">Ziel</label><input id="rend" placeholder="Zieladresse"></div></div><label class="label">Verbindlich zu passierende Zwischenpunkte</label><div class="stops" id="stops"></div><div class="row" style="margin-top:10px"><button id="addstop" class="btn small outline">+ Zwischenpunkt</button><button id="savepoints" class="btn small dark">Zwischenpunkte speichern</button><button id="loadjobdata" class="btn small outline">Auftragsdaten laden</button></div><p class="tiny" style="margin-top:8px">Zwischenpunkte müssen konkrete Adressen oder Koordinaten sein. Straßennamen allein garantieren keinen identischen Verlauf.</p>
+    <div class="map-pick-panel" id="pickPanel">
+      <h3 style="margin-bottom:8px">📍 Kontrollpunkt auf der Karte setzen</h3>
+      <p class="tiny">Wähle aus, welche Art von Punkt du setzen möchtest. Danach auf „Kartenauswahl starten“ tippen und die genaue Stelle auf der Karte antippen. Jeder Punkt muss anhand des Bescheids geprüft werden.</p>
+      <label class="label" for="mapPickMode">Punktart</label>
+      <select id="mapPickMode" aria-label="Punktart auf Karte">
+        <option value="stop">Neuer Zwischenpunkt (in Reihenfolge)</option>
+        <option value="start">Startposition</option>
+        <option value="end">Zielposition</option>
+      </select>
+      <div class="row"><button class="btn dark" type="button" id="armPick">📍 Kartenauswahl starten</button><button class="btn outline" type="button" id="cancelPick">Abbrechen</button></div>
+      <p class="pick-help" id="pickStatus" aria-live="polite">Du kannst die Karte zunächst mit zwei Fingern verschieben und hineinzoomen.</p>
+      <div class="row"><button class="btn outline small" id="zoomSelected" type="button">Gesetzte Punkte zeigen</button></div>
+    </div>
+<div class="row" style="margin-top:14px"><button id="calc" class="btn primary">Route berechnen</button><button id="resetroute" class="btn outline">Route löschen</button></div><p id="rstatus" class="status" aria-live="polite"></p><div class="row" style="margin-top:9px"><div class="metric"><span>Routenlänge</span><b id="distance">–</b></div><div class="metric"><span>Fahrzeit ohne Pausen</span><b id="duration">–</b></div></div></div>
 <div class="card"><h2>Erkannte Straßenfolge aus dem Bescheid</h2><p class="tiny">Die Elemente sind Textabschnitte aus dem Dokument, noch keine georeferenzierten GPS-Punkte. Fehlende oder falsch erkannte Straßen können gefährlich sein.</p><div id="routeSequence" class="roadchips" style="margin-top:10px">Noch keine Straßenfolge analysiert.</div><hr class="separate"><h3>Ortsvorschläge (manuelle Auswahl)</h3><p class="tiny">Ein Klick übernimmt den Namen als bearbeitbaren Zwischenpunkt. Die automatische Zuordnung zu einer Anschlussstelle ist nicht zuverlässig; vor der Berechnung präzisieren.</p><div id="pointIdeas" class="analysislist" style="margin-top:8px"></div></div>
+
+   <div class="card" id="reviewCard">
+     <h2>Routenvorschlag mit dem Bescheid vergleichen</h2>
+     <p class="tiny">Die Routenberechnung zeigt einen Pkw-Routenvorschlag. Ein rein textlicher Straßenvergleich kann falsche Treffer liefern; Anschlussstellen, Rampen, Fahrtrichtungen, Durchfahrtshöhen, Verbote und Auflagen werden damit <b>nicht</b> geprüft.</p>
+     <div id="roadReviewStatus" class="review-status" aria-live="polite" style="margin-top:12px">Noch keine Kartenroute berechnet. Aus 61 Textabschnitten werden nicht automatisch 61 GPS-Punkte.</div>
+     <div id="roadReviewList" class="route-review-list"></div>
+     <button class="btn outline small" id="copyCompare" type="button" style="margin-top:12px">Straßenvergleich kopieren</button>
+   </div>
 <div class="card"><h2>Vorgeschriebener Fahrweg</h2><div class="summarytext" id="permitpreview">Noch kein Fahrweg erfasst.</div><hr class="separate"><div class="warn hint"><strong>Wichtig:</strong> Ein vom Pkw-Routing berechneter Vorschlag ist keine Prüfung der genehmigten GST-Strecke. Vergleiche den Verlauf und alle Auflagen mit dem Originaldokument.</div><label class="checkitem"><input id="c1" type="checkbox"><span>Auftrag und OCR-Angaben mit dem Original geprüft.</span></label><label class="checkitem"><input id="c2" type="checkbox"><span>Den gesamten geplanten Kartenverlauf Abschnitt für Abschnitt mit dem vorgeschriebenen Fahrweg verglichen.</span></label><label class="checkitem"><input id="c3" type="checkbox"><span>Weitere Streckenauflagen, Zeiten und Besonderheiten überprüft.</span></label><button id="confirm" class="btn dark full" style="margin-top:10px">Eigene Fahrwegprüfung bestätigen</button><p id="checkstatus" class="status"></p></div></div>
 <div class="stickyMap"><div class="card"><div class="headrow" style="margin-bottom:0"><h2>Aktuelle Onlinekarte</h2><span class="miniText">© OpenStreetMap</span></div><div class="row" style="margin-top:12px"><button id="showends" class="btn outline small" type="button">📍 Start und Ziel auf Karte anzeigen</button><button id="gpstestmap" class="btn dark small" type="button">⌖ GPS testen</button></div><p class="status" id="mapgpsstatus" role="status" aria-live="polite">Die Karte zeigt derzeit nur Kartenmaterial, noch keinen genehmigten Fahrweg.</p><div class="maparea"><div id="map" class="map"></div><div id="mapfallback" class="map-placeholder">Karte wird geladen …</div><div class="maptools"><button id="fit" title="Gesamte Route anzeigen">⛶</button><button id="locatemap" title="Meinen Standort anzeigen">⌖</button></div></div><p class="foot">Live-Kartenmaterial benötigt Internet. Keine Live-Verkehrsinformationen und keine automatische Prüfung von Durchfahrtbeschränkungen oder BF3-Auflagen. Routing-Dienst: OSRM-Demo, nur zum Testen.</p></div></div></div>
 </section>
@@ -65,7 +103,8 @@ body,main,section,.card,.split,.split>div,.stickyMap,.activejob,.maparea,.roadit
 <div class="card"><h2>Erkannte Einschränkungen und Hinweise</h2><p class="intro">Automatisch gefundene Textstellen aus dem Bescheid. Die Zuordnung zu konkreten Straßenabschnitten kann aus dem Text allein nicht immer zuverlässig vorgenommen werden. Die Anzeige ersetzt nicht das Lesen des vollständigen Originals einschließlich aller Anlagen.</p>
 <div class="statsgrid" id="conditionsStats"></div><label class="label" for="conditionFilter">Thema</label><select id="conditionFilter"><option value="Alle">Alle Themen</option><option value="Begleitung">BF3 / BF4 / Polizei</option><option value="Zeiten">Fahrzeiten / Verbote</option><option value="Straße">Baustellen / Sperrungen</option><option value="Auflagen">WVZ / Verkehrszeichen</option></select><div class="analysislist" id="conditionItems" style="margin-top:12px"><div class="tiny">Noch keine Bescheid-Analyse vorhanden.</div></div>
 <p class="hint warn">⚠️ Diese Fundstellen werden durch Stichwortsuche erzeugt. Nicht erkannte Auflagen können dennoch gelten. Prüfe auch die Abweichungen zwischen Antrag und Erlaubnisteil sowie ggf. verkehrsrechtliche Anordnungen.</p></div></section>
-<section class="screen" id="fahrt"><div class="headrow"><h2>Live-Fahrt</h2><span class="badge" id="gpsbadge">GPS aus</span></div><div class="activejob" id="drivejob">Kein Auftrag ausgewählt.</div><div class="card"><div class="statuspanel" id="driveGpsEnvironment" role="status" aria-live="polite">Standortprüfung …</div><div class="row"><button id="gpstestdrive" class="btn outline small" type="button">⌖ Standort einmalig testen</button></div><p class="tiny" style="margin-top:8px">Der GPS-Test benötigt keine Route und speichert keinen Standort dauerhaft. Er sendet deine Position nicht automatisch an einen Server.</p><hr class="separate"><div class="gpsline"><div><b style="font-size:14px">GPS-Navigation</b><div class="tiny" id="gpsinfo">Noch kein Standort vorhanden.</div></div><button id="gpsbtn" class="btn dark">GPS starten</button></div><div class="row" style="margin-top:10px"><label class="checkitem"><input id="follow" type="checkbox" checked><span>Karte folgt meinem Standort</span></label></div><div class="navbox"><div class="second" id="navhint">Navigation noch nicht gestartet</div><div class="next" id="navnext">Keine geprüfte Route aktiv</div><div class="second" id="navsub">Route im Routenplan anlegen und eigenständig prüfen.</div></div><div class="row"><button id="startnav" class="btn primary">Fahrtmodus starten</button><button id="stopnav" class="btn outline">Fahrtmodus beenden</button><button id="gpx" class="btn outline">GPX exportieren</button></div><p class="status" id="driveStatus"></p><div id="offroute" class="hint warn" style="display:none">⚠️ Mögliche Routenabweichung. Fahre nicht automatisch über eine alternative Strecke. Genehmigten Fahrweg prüfen.</div><div class="maparea" style="height:40vh;min-height:290px"><div id="driveMap" class="map"></div><div id="drivemapfallback" class="map-placeholder">Karte wird geladen …</div></div><h3 style="margin:18px 0 6px">Nächste Routenschritte (Kartenentwurf)</h3><div class="steps" id="steps"><p class="tiny">Nach der Routenberechnung erscheinen hier die Fahranweisungen.</p></div><p class="hint warn">Diese Version ist keine zugelassene oder sicherheitsgeprüfte BF3-Navigation. GPS funktioniert nur, solange Browser und Standortberechtigung aktiv sind. Navigation während der Fahrt nur über geeignete Halterung und ohne Bedienung.</p></div></section>
+<section class="screen" id="fahrt"><div class="headrow"><h2>Live-Fahrt</h2><span class="badge" id="gpsbadge">GPS aus</span></div><div class="activejob" id="drivejob">Kein Auftrag ausgewählt.</div><div class="card"><div class="statuspanel" id="driveGpsEnvironment" role="status" aria-live="polite">Standortprüfung …</div><div class="row"><button id="gpstestdrive" class="btn outline small" type="button">⌖ Standort einmalig testen</button></div><p class="tiny" style="margin-top:8px">Der GPS-Test benötigt keine Route und speichert keinen Standort dauerhaft. Er sendet deine Position nicht automatisch an einen Server.</p><hr class="separate"><div class="gpsline"><div><b style="font-size:14px">GPS-Navigation</b><div class="tiny" id="gpsinfo">Noch kein Standort vorhanden.</div></div><button id="gpsbtn" class="btn dark">GPS starten</button></div><div class="row" style="margin-top:10px"><label class="checkitem"><input id="follow" type="checkbox" checked><span>Karte folgt meinem Standort</span></label></div><div class="hint" id="progressInfo" aria-live="polite">GPS-Standort wird nur mit dem Kartenentwurf verglichen, sofern eine Route berechnet wurde. Keine amtliche Routenprüfung.</div>
+<div class="navbox"><div class="second" id="navhint">Navigation noch nicht gestartet</div><div class="next" id="navnext">Keine geprüfte Route aktiv</div><div class="second" id="navsub">Route im Routenplan anlegen und eigenständig prüfen.</div></div><div class="row"><button id="startnav" class="btn primary">Fahrtmodus starten</button><button id="stopnav" class="btn outline">Fahrtmodus beenden</button><button id="gpx" class="btn outline">GPX exportieren</button></div><p class="status" id="driveStatus"></p><div id="offroute" class="hint warn" style="display:none">⚠️ Mögliche Routenabweichung. Fahre nicht automatisch über eine alternative Strecke. Genehmigten Fahrweg prüfen.</div><div class="maparea" style="height:40vh;min-height:290px"><div id="driveMap" class="map"></div><div id="drivemapfallback" class="map-placeholder">Karte wird geladen …</div></div><h3 style="margin:18px 0 6px">Nächste Routenschritte (Kartenentwurf)</h3><div class="steps" id="steps"><p class="tiny">Nach der Routenberechnung erscheinen hier die Fahranweisungen.</p></div><p class="hint warn">Diese Version ist keine zugelassene oder sicherheitsgeprüfte BF3-Navigation. GPS funktioniert nur, solange Browser und Standortberechtigung aktiv sind. Navigation während der Fahrt nur über geeignete Halterung und ohne Bedienung.</p></div></section>
 <section class="screen" id="archiv"><div class="headrow"><h2>Gespeicherte Aufträge</h2><span class="badge good">Lokal auf dem Gerät</span></div><div class="card"><p class="intro">Aufträge werden im Browser dieses Geräts gespeichert. Für einen Gerätewechsel kannst du ein Backup exportieren.</p><div class="row"><button id="backup" class="btn dark">Backup als JSON</button><label class="btn outline" for="restorefile" style="cursor:pointer">Backup importieren</label><input id="restorefile" type="file" accept="application/json,.json" style="display:none"></div><label class="label" for="filter">Aufträge suchen</label><input id="filter" placeholder="Name, Start oder Ziel"><div id="jobs"></div><p id="archstatus" class="status"></p></div><div class="hint warn">Datenschutz: Aufträge und Fahrwege werden unverschlüsselt im lokalen Browser-Speicher abgelegt. Für den produktiven Einsatz sind Geräteschutz, Datenaufbewahrung, Verschlüsselung und ein geeigneter Karten-/Routingvertrag erforderlich. Die Adresssuche (Photon)/Routenberechnung (OSRM) über öffentliche Testdienste überträgt gesuchte Adressen bzw. Koordinaten an externe Anbieter; bitte keine vertraulichen Adressen über öffentliche Server verarbeiten. Für den produktiven Einsatz ist ein vertraglich bereitgestellter Anbieter erforderlich.</div></section>
 </main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -255,6 +294,133 @@ window.addEventListener('beforeunload',()=>{if(gpsWatch!==null)navigator.geoloca
 // Einzeldatei ohne Service Worker
 
 if(selected())useJob(selected());else{renderStops();setActiveLabel();renderAnalysis()}renderJobs();
+</script>
+
+<script>
+/* BF3 2.3: Kartenkontrollpunkte & transparenter Straßenvergleich.
+   Jede Geokoordinate wird nur auf ausdrückliche Kartenauswahl des Nutzers übernommen.
+   Zulassungsrechtliche Bewertung erfolgt ausdrücklich NICHT automatisch. */
+(()=>{
+'use strict';
+const pickButton = document.getElementById('armPick');
+const pickStatus = document.getElementById('pickStatus');
+const mode = document.getElementById('mapPickMode');
+const reviewStatus = document.getElementById('roadReviewStatus');
+const reviewList = document.getElementById('roadReviewList');
+let picking = false;
+let tempMarkers=[];
+let planLine=null;
+let coveredLine=null;
+let compareText='';
+function speakStatus(message){pickStatus.textContent=message;}
+function setPicking(on){picking=!!on;pickButton.classList.toggle('pick-active',picking);pickButton.textContent=picking?'✓ Karte antippen…':'📍 Kartenauswahl starten';let a=document.querySelector('#route .maparea');if(a)a.classList.toggle('pick-target',picking)}
+function cleanupTemporary(){for(let m of tempMarkers){try{m.remove()}catch{}}tempMarkers=[];if(planLine){try{planLine.remove()}catch{}planLine=null}}
+function positionLabel(pos){return pos[0].toFixed(6)+', '+pos[1].toFixed(6)}
+function geoIcon(n){return L.divIcon({className:'',html:'<div class="geo-waypoint-icon">'+n+'</div>',iconSize:[26,26],iconAnchor:[13,13]})}
+function drawPins(){
+  cleanupTemporary();
+  if(!window.L||!map)return;
+  const p=[];
+  for(let i=0;i<stops.length;i++){
+    const c=coords(stops[i]);
+    if(!c)continue;
+    p.push(c);
+    const marker=L.marker(c,{icon:geoIcon(i+1)}).addTo(map);
+    marker.bindPopup('Kontrollpunkt '+(i+1)+' – manuell gesetzt, prüfpflichtig');
+    tempMarkers.push(marker);
+  }
+  if(p.length>1){planLine=L.polyline(p,{color:'#147f9f',weight:3,opacity:.8,dashArray:'6 9'}).addTo(map);}
+}
+function zoomPoints(){if(!map||!window.L)return;const points=[];
+  for(const v of [$('rstart').value,...stops,$('rend').value]){const c=coords(v);if(c)points.push(c)}
+  if(points.length>=2)map.fitBounds(points,{padding:[35,35],maxZoom:14});
+  else if(points.length)map.setView(points[0],13);
+  else speakStatus('Noch keine Punkte mit GPS-Koordinaten. Setze einen Punkt auf der Karte.');
+}
+pickButton.addEventListener('click',()=>{
+  if(!window.L||!map){speakStatus('Karte nicht geladen. Internetverbindung prüfen.');return;}
+  setPicking(true);
+  speakStatus('Kartenauswahl aktiv: Karte mit zwei Fingern bewegen, mit einem Finger an der gewünschten Stelle antippen. Punkt wird nur als Entwurf übernommen.');
+  go('route');
+  map.invalidateSize();
+  document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
+});
+document.getElementById('cancelPick').addEventListener('click',()=>{setPicking(false);speakStatus('Kartenauswahl beendet.')});
+document.getElementById('zoomSelected').addEventListener('click',zoomPoints);
+if(map){map.on('click',event=>{
+  if(!picking)return;
+  const pos=[event.latlng.lat,event.latlng.lng];
+  const val=positionLabel(pos);
+  const ty=mode.value;
+  if(ty==='stop'){
+    if(stops.length>=12){speakStatus('Diese Testversion unterstützt maximal 12 Zwischenpunkte. Vorhandene Punkte prüfen oder entfernen.');setPicking(false);return;}
+    stops.push(val);renderStops();
+  }else if(ty==='start'){$('rstart').value=val;}
+  else {$('rend').value=val;}
+  invalidate();
+  drawPins();
+  setPicking(false);
+  speakStatus((ty==='stop'?'Zwischenpunkt '+stops.length:ty==='start'?'Startpunkt':'Zielpunkt')+' gesetzt: '+val+'. Bitte auf der Karte überprüfen und anschließend „Zwischenpunkte speichern“ wählen.');
+  notice('rstatus','Kartenkontrollpunkt ergänzt. Die vorherige Routenberechnung wurde zurückgesetzt. Genehmigten Fahrweg beachten.');
+  });}
+const originalRenderStops=renderStops;
+renderStops=function(){originalRenderStops();drawPins()};
+const originalInvalidate=invalidate;
+invalidate=function(){originalInvalidate();if(coveredLine){coveredLine.remove();coveredLine=null}resetReview();drawPins()};
+const originalUseJob=useJob;
+useJob=function(j){setPicking(false);originalUseJob(j);drawPins();resetReview()};
+function resetReview(){reviewStatus.textContent='Noch keine Kartenroute berechnet. Erkennbare Straßennummern werden nach der Berechnung als unverbindliche Hinweise verglichen.';reviewList.innerHTML='';compareText='';}
+function roadRefs(raw){
+  const found=String(raw||'').match(/\b(?:A|B|L|K)\s?\d{1,4}\b/gi)||[];
+  return [...new Set(found.map(x=>x.replace(/\s/g,'').toUpperCase()))];
+}
+function showReview(){
+  if(!route){resetReview();return;}
+  const known=analysisAvailable();
+  const original=known?.route||$('permit').value||'';
+  const allWanted=roadRefs(original);
+  const legs=route.legs||[];
+  const steps=legs.flatMap(leg=>leg.steps||[]);
+  const routeRoads=roadRefs(steps.map(x=>[x.ref,x.name].filter(Boolean).join(' ')).join(' | '));
+  let found=allWanted.filter(x=>routeRoads.includes(x));
+  let unchecked=allWanted.filter(x=>!routeRoads.includes(x));
+  // Emphasize that a shared road designation does not establish same carriageway or route.
+  reviewStatus.innerHTML='<b>Unverbindlicher Textabgleich der Straßennummern</b><br>Aus dem Bescheid: '+allWanted.length+' verschiedene Straßennummern. Im Routendienst wiedergefunden: '+found.length+'. Ohne Treffer: '+unchecked.length+'. <b>Auch Treffer bestätigen weder die korrekte Anschlussstelle noch den genehmigten Verlauf.</b>';
+  reviewList.innerHTML='';
+  if(!allWanted.length){reviewStatus.textContent='Keine verwertbaren Straßennummern aus dem Bescheid erkannt. Gesamten Verlauf selbst prüfen.';return;}
+  for(const label of allWanted){const el=document.createElement('span');const yes=routeRoads.includes(label);el.className='road-review-chip '+(yes?'found':'missing');el.textContent=(yes?'Erwähnt: ':'Nicht erkannt: ')+label;reviewList.appendChild(el);}
+  compareText='Aus dem Original: '+allWanted.join(', ')+'\nIn Routingdaten erwähnt: '+routeRoads.join(', ')+'\nOhne Treffer: '+unchecked.join(', ')+'\nWICHTIG: Weder Straßenübereinstimmungen noch Kontrollpunkte sind eine Genehmigungs- oder Befahrbarkeitsprüfung.';
+}
+const oldCalculate=$('calc').onclick;
+$('calc').onclick=async (...args)=>{await oldCalculate(...args);showReview();drawPins()};
+document.getElementById('copyCompare').addEventListener('click',async()=>{
+  if(!compareText){reviewStatus.textContent='Bitte zuerst eine Route berechnen.';return;}
+  try{await navigator.clipboard.writeText(compareText);reviewStatus.textContent='Straßenvergleich kopiert. Dies ist keine BF3-Routenfreigabe.';}
+  catch{reviewStatus.textContent='Kopieren nicht verfügbar. Die Textauswertung bleibt sichtbar.';}
+});
+function drawProgress(){
+  if(coveredLine){coveredLine.remove();coveredLine=null;}
+  if(!navActive||!route||!lastGPS||!driveMap||!window.L)return;
+  const geometry=route.geometry?.coordinates;
+  if(!geometry||geometry.length<2)return;
+  const p=[lastGPS.lat,lastGPS.lon];
+  const closest=closestPointInfo(p,geometry);
+  const age=Date.now()-lastGPS.timestamp;
+  const target=$('progressInfo');
+  const badQuality=lastGPS.accuracy>100||age>30000;
+  if(badQuality){target.textContent='GPS momentan ungenau oder veraltet (Genauigkeit '+Math.round(lastGPS.accuracy)+' m). Routennähe nicht zuverlässig bewertbar.';return;}
+  const snapped=geometry.slice(0,closest.index+2).map(c=>[c[1],c[0]]);
+  coveredLine=L.polyline(snapped,{color:'#0b7f92',weight:6,opacity:.85,dashArray:'8 6'}).addTo(driveMap);
+  target.textContent='GPS-Abstand zum unverbindlichen Routenvorschlag: ca. '+Math.round(closest.dist)+' m. Türkis zeigt nur die GPS-Projektion bis zur nächsten Kartenposition – keine Bestätigung einer tatsächlich gefahrenen Strecke.';
+}
+const oldGpsSuccess=gpsSuccess;
+gpsSuccess=function(p){oldGpsSuccess(p);drawProgress()};
+const oldStopNav=$('stopnav').onclick;
+$('stopnav').onclick=(...args)=>{oldStopNav(...args);if(coveredLine){coveredLine.remove();coveredLine=null;}$('progressInfo').textContent='Fahrtmodus beendet. GPS-Positionsanzeige kann separat weiterlaufen.';};
+const oldStartNav=$('startnav').onclick;
+$('startnav').onclick=(...args)=>{oldStartNav(...args);drawProgress()};
+drawPins();resetReview();
+})();
 </script>
 </body>
 </html>
